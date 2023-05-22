@@ -1,0 +1,21 @@
+# vscode
+.vscode
+
+# pyenv
+.python-version
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# macOS files
+.DS_Store
+
+# dirvenv files
+.envrc
+
