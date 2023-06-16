@@ -1,13 +1,13 @@
 
-m1: 1  # mass
+m1: 1.5  # mass
 L1: 1  # length of rod
 m2: 2  # mass
 L2: 1.5  # length of rod
 g: 9.8  # gravitational acceleration
 
 time_coord:
-  T: 30  # time span
-  N_t: 301  # number of grid for time span
+  T: 200  # time span
+  N_t: 2001  # number of grid for time span
 
 init_cond:
   theta_vec: [60, 0, 80, 0]
