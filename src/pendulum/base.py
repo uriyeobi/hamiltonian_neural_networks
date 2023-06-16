@@ -42,7 +42,6 @@ class InitialCondition:
         for i in range(len(self.theta_vec)):
             if i % 2 == 0:
                 self.theta_vec[i] *= np.pi / 180
-        breakpoint()
         return self.theta_vec
 
 
@@ -91,6 +90,11 @@ class BasePendulum(BaseModel):
     @abstractmethod
     def gen_sol_df(self) -> pd.DataFrame:
         """Generate solution dataframe."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def create_generalized_coord_momenta(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create generalized coordinates and generalized momenta."""
         raise NotImplementedError
 
 

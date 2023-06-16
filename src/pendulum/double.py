@@ -84,6 +84,55 @@ class DoublePendulum(BasePendulum):
         )
         return df
 
+    def create_generalized_coord_momenta(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create generalized coordinates and generalized momenta."""
+        m1 = self.m1
+        m2 = self.m2
+        L1 = self.L1
+        L2 = self.L2
+        g = self.g
+        theta1 = df["theta1"]
+        theta2 = df["theta2"]
+        theta1_dot = df["theta1_dot"]
+        theta2_dot = df["theta2_dot"]
+        c = np.cos(theta1 - theta2)
+        s = np.sin(theta1 - theta2)
+        df = (
+            df.assign(q1=theta1)
+            .assign(q2=theta2)
+            .assign(p1=(m1 + m2) * L1**2 * theta1_dot + m2 * L1 * L2 * theta2_dot * c)
+            .assign(p2=m2 * L2**2 * theta2_dot + m2 * L1 * L2 * theta1_dot * c)
+        )
+
+        p1 = df["p1"]
+        p2 = df["p2"]
+        h1 = p1 * p2 * s / (L1 * L2 * (m1 + m2 * s**2))
+        h2 = (
+            m2 * L2**2 * p1**2
+            + (m1 + m2) * L1**2 * p2**2
+            - 2 * m2 * L1 * L2 * p1 * p2 * c
+        ) / (2 * (L1 * L2 * (m1 + m2 * s**2)) ** 2)
+        df = (
+            df.assign(
+                dq1dt=(L2 * p1 - L1 * p2 * c) / (L1**2 * L2 * (m1 + m2 * s**2))
+            )
+            .assign(
+                dq2dt=(-m2 * L2 * p1 * c + (m1 + m2) * L1 * p2)
+                / (m2 * L1 * L2**2 * (m1 + m2 * s**2))
+            )
+            .assign(
+                dp1dt=-(m1 + m2) * g * L1 * np.sin(theta1)
+                - h1
+                + h2 * np.sin(2 * (theta1 - theta2))
+            )
+            .assign(
+                dp2dt=-m2 * g * L2 * np.sin(theta2)
+                + h1
+                - h2 * np.sin(2 * (theta1 - theta2))
+            )
+        )
+        return df
+
 
 cmap = sns.color_palette("tab20")
 

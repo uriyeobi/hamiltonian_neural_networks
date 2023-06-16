@@ -41,6 +41,16 @@ class SinglePendulum(BasePendulum):
         )
         return df
 
+    def create_generalized_coord_momenta(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create generalized coordinates and generalized momenta."""
+        df = (
+            df.assign(q=lambda x: x["theta"])
+            .assign(p=lambda x: self.m1 * self.L1**2 * x["theta_dot"])
+            .assign(dqdt=lambda x: x["theta_dot"])
+            .assign(dpdt=lambda x: -self.m1 * self.g * self.L1 * np.sin(x["theta"]))
+        )
+        return df
+
 
 cmap = sns.color_palette("tab20")
 
