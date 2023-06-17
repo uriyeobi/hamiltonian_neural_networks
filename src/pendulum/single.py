@@ -20,7 +20,7 @@ class SinglePendulum(BasePendulum):
         return self.m1 * self.L1 * self.g * (1.0 - np.cos(theta))
 
     def equation_motion(self, u, t) -> List[float]:
-        """Equations of motion."""
+        """Equation of motion."""
         [theta, theta_dot] = u
         return [theta_dot, -self.g / self.L1 * np.sin(theta)]
 

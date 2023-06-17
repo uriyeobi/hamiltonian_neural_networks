@@ -1,14 +1,12 @@
 """Utilities for Pendulum."""
 
-from single import SinglePendulum, SinglePendulumAnimator
-from double import DoublePendulum, DoublePendulumAnimator
-import pandas as pd
+from single import SinglePendulum
+from double import DoublePendulum
 from pathlib import Path
-import os
-import numpy as np
+from typing import List, Any
 
 
-def generate_data(config_dir: Path) -> pd.DataFrame:
+def generate_data(config_dir: Path) -> List[Any]:
     """Generating time-series data of pendulum dynamics."""
     p1 = SinglePendulum().from_yaml(str(config_dir / "single.yaml"))
     p2 = DoublePendulum().from_yaml(str(config_dir / "double.yaml"))
@@ -16,7 +14,7 @@ def generate_data(config_dir: Path) -> pd.DataFrame:
     df1 = p1.create_generalized_coord_momenta(df1)
     df2 = p2.gen_sol_df()
     df2 = p2.create_generalized_coord_momenta(df2)
-
     df = df1.merge(df2, how="inner", on="time_step", suffixes=["_single", "_double"])
+    mlg = {"single": [p1.m1, p1.L1, p1.g], "double": [p2.m1, p2.L1, p2.m2, p2.L2, p2.g]}
 
-    return df
+    return [df, mlg]

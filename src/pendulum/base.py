@@ -24,11 +24,6 @@ class TimeCoordinate:
         """Time grid."""
         return np.linspace(0, self.T, self.N_t)
 
-    @property
-    def dt(self) -> float:
-        """delta t."""
-        return self.t_grid[1] - self.t_grid[0]
-
 
 @dataclass
 class InitialCondition:
