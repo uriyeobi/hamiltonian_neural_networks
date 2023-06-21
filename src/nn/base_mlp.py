@@ -5,7 +5,8 @@ import tensorflow as tf
 import numpy.typing as npt
 from spec import TrainSpec
 import numpy as np
-
+import os
+os.environ['PYTHONHASHSEED']=str(42)
 np.random.seed(42)
 tf.random.set_seed(42)
 tf.keras.utils.set_random_seed(42)
