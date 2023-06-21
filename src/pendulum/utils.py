@@ -14,7 +14,7 @@ def generate_data(config_dir: Path) -> List[Any]:
     df1 = p1.create_generalized_coord_momenta(df1)
     df2 = p2.gen_sol_df()
     df2 = p2.create_generalized_coord_momenta(df2)
-    df = df1.merge(df2, how="inner", on="time_step", suffixes=["_single", "_double"])
+    df = df1.merge(df2, how="outer", on="time_step", suffixes=["_single", "_double"])
     mlg = {"single": [p1.m1, p1.L1, p1.g], "double": [p2.m1, p2.L1, p2.m2, p2.L2, p2.g]}
 
     return [df, mlg]
