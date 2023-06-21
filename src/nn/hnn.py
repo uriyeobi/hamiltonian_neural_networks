@@ -7,6 +7,10 @@ from functools import cached_property
 import numpy as np
 from spec import TrainSpec
 
+np.random.seed(42)
+tf.random.set_seed(42)
+tf.keras.utils.set_random_seed(42)
+
 
 class HNN(tf.keras.Model):
     """Hamiltonian Neural Networks."""
@@ -61,8 +65,8 @@ def estimate_single_pendulum_hamiltonian(mlg, x, dx):
     [dqdt, _] = dx
 
     p_est = dqdt * m * L**2
-    dt = 0.0001
-    q_est = q + dt * dqdt
+
+    q_est = q
 
     return calculate_single_pendulum_hamiltonian(mlg, [q_est, p_est])
 
@@ -76,9 +80,8 @@ def estimate_double_pendulum_hamiltonian(mlg, x, dx):
     p1_est = (m1 + m2) * L1**2 * dq1dt + m2 * L1 * L2 * dq2dt * np.cos(q1 - q2)
     p2_est = m2 * L2**2 * dq2dt + m2 * L1 * L2 * dq1dt * np.cos(q1 - q2)
 
-    dt = 0.0001
-    q1_est = q1 + dq1dt * dt
-    q2_est = q2 + dq2dt * dt
+    q1_est = q1
+    q2_est = q2
 
     return calculate_double_pendulum_hamiltonian(mlg, [q1_est, q2_est, p1_est, p2_est])
 
@@ -94,20 +97,6 @@ def calculate_double_pendulum_hamiltonian(mlg, x):
             - 2 * m2 * L1 * L2 * p1 * p2 * np.cos(q1 - q2)
         )
         / (2 * m2 * L1**2 * L2**2 * (m1 + m2 * (np.sin(q1 - q2)) ** 2))
-        - (m1 + m2) * g * L1 * np.cos(q1)
-        - m2 * g * L2 * np.cos(q2)
-    )
-
-
-def calculate_double_pendulum_hamiltonian_next(mlg, x, dx):
-    """Calculate double pendulum hamiltonian next."""
-    [m1, L1, m2, L2, g] = mlg
-    [q1, q2, _, _] = x
-    [dq1dt, dq2dt, _, _] = dx
-    return (
-        0.5 * (m1 + m2) * L1 * dq1dt**2
-        + 0.5 * m2 * L2**2 * dq2dt**2
-        + m2 * L1 * L2 * dq1dt * dq2dt * np.cos(q1 - q2)
         - (m1 + m2) * g * L1 * np.cos(q1)
         - m2 * g * L2 * np.cos(q2)
     )
@@ -141,11 +130,11 @@ def get_loss(model, x, y, ham0, mlg, hamiltonian_method, penalty_lamb):
         x=x, mlg=mlg, hamiltonian_method=hamiltonian_method, predictions=predictions
     )
 
-    physics_embedded_penalty = tf.reduce_mean(tf.square(ham0 - ham_new)) * penalty_lamb
+    physics_embedded_penalty = tf.reduce_mean(tf.square(ham0 - ham_new))
 
     return (
         tf.reduce_mean(tf.square(predictions - tf.Variable(tf.stack(y))))
-        + physics_embedded_penalty
+        + penalty_lamb * physics_embedded_penalty
     )
 
 
@@ -184,7 +173,6 @@ def train_hnn(
     ham0 = get_hamiltonian(x[0], mlg=train_spec.mlg, hamiltonian_method="curr")
     print(f"{ham0=}")
 
-    tf.random.set_seed(train_spec.seed)
     model = HNN(input_dim=x.shape[1], hidden_dims=train_spec.hidden_dims)
     optimizer = tf.keras.optimizers.Adam(learning_rate=train_spec.learning_rate)
 
@@ -199,6 +187,6 @@ def train_hnn(
             hamiltonian_method=train_spec.hamiltonian_method,
             penalty_lamb=train_spec.penalty_lamb,
         )
-        if itr % 50 == 0:
+        if itr % 100 == 0:
             print(f"{itr=}, loss={loss.numpy()}")
     return model

@@ -4,6 +4,11 @@ from typing import Any
 import tensorflow as tf
 import numpy.typing as npt
 from spec import TrainSpec
+import numpy as np
+
+np.random.seed(42)
+tf.random.set_seed(42)
+tf.keras.utils.set_random_seed(42)
 
 
 class BaseMLP(tf.keras.Model):
@@ -26,12 +31,12 @@ class BaseMLP(tf.keras.Model):
         outputs = self.last_layer(features)
         return outputs
 
+
 def train_base_mlp(
     x: npt.NDArray[Any],
     y: npt.NDArray[Any],
     train_spec: TrainSpec,
 ) -> BaseMLP:
-    tf.random.set_seed(train_spec.seed)
     base_mlp = BaseMLP(
         hidden_dims=train_spec.hidden_dims,
         input_dim=x.shape[1],
