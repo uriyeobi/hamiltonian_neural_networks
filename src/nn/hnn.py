@@ -1,15 +1,14 @@
 """Hamiltonian Neural Networks."""
 from scipy.integrate import solve_ivp
-from typing import Any
+from typing import Any, List, Union
 import tensorflow as tf
 import numpy.typing as npt
 from functools import cached_property
 import numpy as np
 from spec import TrainSpec
+import os
 
-np.random.seed(42)
-tf.random.set_seed(42)
-tf.keras.utils.set_random_seed(42)
+TypeVec = Union[npt.NDArray, tf.Tensor]
 
 
 class HNN(tf.keras.Model):
@@ -51,14 +50,14 @@ class HNN(tf.keras.Model):
         return (tape.gradient(outputs, x)) @ self.M
 
 
-def calculate_single_pendulum_hamiltonian(mlg, x):
+def calculate_single_pendulum_hamiltonian(mlg: List[float], x: TypeVec):
     """Calculate single pendulum hamiltonian."""
     [m, L, g] = mlg
     [q, p] = x
     return -m * g * L * np.cos(q) + p**2 / (2 * m * L**2)
 
 
-def estimate_single_pendulum_hamiltonian(mlg, x, dx):
+def estimate_single_pendulum_hamiltonian(mlg: List[float], x: TypeVec, dx: TypeVec):
     """Estimate single pendulum hamiltonian."""
     [m, L, _] = mlg
     [q, _] = x
@@ -71,7 +70,9 @@ def estimate_single_pendulum_hamiltonian(mlg, x, dx):
     return calculate_single_pendulum_hamiltonian(mlg, [q_est, p_est])
 
 
-def estimate_double_pendulum_hamiltonian(mlg, x, dx):
+def estimate_double_pendulum_hamiltonian(
+    mlg: List[float], x: TypeVec, dx: TypeVec
+) -> float:
     """Estimate double pendulum hamiltonian."""
     [m1, L1, m2, L2, _] = mlg
     [q1, q2, _, _] = x
@@ -86,7 +87,7 @@ def estimate_double_pendulum_hamiltonian(mlg, x, dx):
     return calculate_double_pendulum_hamiltonian(mlg, [q1_est, q2_est, p1_est, p2_est])
 
 
-def calculate_double_pendulum_hamiltonian(mlg, x):
+def calculate_double_pendulum_hamiltonian(mlg: List[float], x: TypeVec) -> float:
     """Calculate double pendulum hamiltonian."""
     [m1, L1, m2, L2, g] = mlg
     [q1, q2, p1, p2] = x
@@ -102,7 +103,9 @@ def calculate_double_pendulum_hamiltonian(mlg, x):
     )
 
 
-def get_hamiltonian(x, mlg, hamiltonian_method, predictions=None):
+def get_hamiltonian(
+    x: TypeVec, mlg: List[float], hamiltonian_method: str, predictions=None
+) -> float:
     """Get Hamiltonian."""
     if len(mlg) == 3:
         if hamiltonian_method == "curr":
@@ -123,7 +126,15 @@ def get_hamiltonian(x, mlg, hamiltonian_method, predictions=None):
             )
 
 
-def get_loss(model, x, y, ham0, mlg, hamiltonian_method, penalty_lamb):
+def get_loss(
+    model: HNN,
+    x: TypeVec,
+    y: TypeVec,
+    ham0: float,
+    mlg: List[float],
+    hamiltonian_method: str,
+    penalty_lamb: float,
+):
     """Get loss."""
     predictions = model.forward(tf.Variable(tf.stack(x)))
     ham_new = get_hamiltonian(
@@ -138,7 +149,16 @@ def get_loss(model, x, y, ham0, mlg, hamiltonian_method, penalty_lamb):
     )
 
 
-def get_grad(model, optimizer, x, y, ham0, mlg, hamiltonian_method, penalty_lamb):
+def get_grad(
+    model: HNN,
+    optimizer: Any,
+    x: TypeVec,
+    y: TypeVec,
+    ham0: float,
+    mlg: List[float],
+    hamiltonian_method: str,
+    penalty_lamb: float,
+):
     """Get gradient for each step for HNN."""
     with tf.GradientTape() as tape:
         tape.watch(model.trainable_variables)
@@ -163,6 +183,14 @@ def integrate_hnn(model: HNN, t_span: npt.NDArray[Any], y0: npt.NDArray[Any], **
     return solve_ivp(fun=fun, t_span=t_span, y0=y0, **kwargs)
 
 
+def init_seed() -> None:
+    """Initialize seed."""
+    os.environ["PYTHONHASHSEED"] = str(42)
+    np.random.seed(42)
+    tf.random.set_seed(42)
+    tf.keras.utils.set_random_seed(42)
+
+
 def train_hnn(
     x: npt.NDArray[Any],
     y: npt.NDArray[Any],
@@ -170,13 +198,15 @@ def train_hnn(
 ) -> HNN:
     """Train HNN."""
 
+    init_seed()
+
     ham0 = get_hamiltonian(x[0], mlg=train_spec.mlg, hamiltonian_method="curr")
     print(f"{ham0=}")
 
     model = HNN(input_dim=x.shape[1], hidden_dims=train_spec.hidden_dims)
     optimizer = tf.keras.optimizers.Adam(learning_rate=train_spec.learning_rate)
 
-    for itr in range(train_spec.epochs):
+    for itr in range(1, train_spec.epochs + 1):
         loss, optimizer = get_grad(
             model=model,
             optimizer=optimizer,

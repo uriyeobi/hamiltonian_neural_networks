@@ -9,7 +9,7 @@ This repository contains projects related to Physics-Informed Machine Learning.
 
 This work is about time-series predictions for pendulum dynamics.
 
-Demo: [https://github.com/uriyeobi/PIML/blob/main/notebooks/pendulum_nn.ipynb](https://github.com/uriyeobi/PIML/blob/main/notebooks/pendulum_nn.ipynb)
+Demo: [https://github.com/uriyeobi/PIML/blob/main/notebooks/pendulum_hnn.ipynb](https://github.com/uriyeobi/PIML/blob/main/notebooks/pendulum_hnn.ipynb)
 
 Blog posts: [Part 1](https://uriyeobi.github.io/2023-05-23/laplace-to-nn-1) | [Part 2](https://uriyeobi.github.io/2023-06-15/laplace-to-nn-2)
 

@@ -6,13 +6,11 @@ import numpy.typing as npt
 from spec import TrainSpec
 import numpy as np
 import os
-os.environ['PYTHONHASHSEED']=str(42)
-np.random.seed(42)
-tf.random.set_seed(42)
-tf.keras.utils.set_random_seed(42)
 
 
 class BaseMLP(tf.keras.Model):
+    """Base Multilayer Perceptrons."""
+
     def __init__(
         self, hidden_dims, input_dim, output_dim, hidden_activation="tanh", **kwargs
     ):
@@ -33,11 +31,23 @@ class BaseMLP(tf.keras.Model):
         return outputs
 
 
+def init_seed() -> None:
+    """Initialize seed."""
+
+    os.environ["PYTHONHASHSEED"] = str(42)
+    np.random.seed(42)
+    tf.random.set_seed(42)
+    tf.keras.utils.set_random_seed(42)
+
+
 def train_base_mlp(
     x: npt.NDArray[Any],
     y: npt.NDArray[Any],
     train_spec: TrainSpec,
 ) -> BaseMLP:
+    """Train base MLP."""
+    init_seed()
+
     base_mlp = BaseMLP(
         hidden_dims=train_spec.hidden_dims,
         input_dim=x.shape[1],
@@ -47,9 +57,11 @@ def train_base_mlp(
         loss="mean_squared_error",
         optimizer=tf.keras.optimizers.Adam(train_spec.learning_rate),
     )
+    batch_size = x.shape[0]
     base_mlp.fit(
         x=x,
         y=y,
+        batch_size=batch_size,
         epochs=train_spec.epochs,
         verbose=0,
     )
